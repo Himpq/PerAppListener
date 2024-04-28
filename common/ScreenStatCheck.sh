@@ -46,10 +46,10 @@ fingerprintUnlock () {
 
     if [ "$1" == "DOWN" ]; then
         nowStat=$(cat "$UPERF")
-        if [ "$screeononMode" == "$nowStat" ]; then
+        if [ "$screenonMode" == "$nowStat" ]; then
             return
         fi
-        changemod "$screeononMode"
+        changemod "$screenonMode"
 
         p_log "FP Touching -> $screenonMode"
 
@@ -64,10 +64,10 @@ fingerprintUnlock () {
 
             p_log "FP SUC -> $screenonMode"
 
-            if [ "$screeononMode" == "$nowStat" ]; then
+            if [ "$screenonMode" == "$nowStat" ]; then
                 return
             fi
-            changemod "$screeononMode"
+            changemod "$screenonMode"
 
         else
 
