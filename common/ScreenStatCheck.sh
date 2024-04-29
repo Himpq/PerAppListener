@@ -4,6 +4,11 @@ MODDIR=${0%/*}
 
 STORAGE="/storage/emulated/0"
 
+# 1Unit = 0.01s
+# 100Unit = 1s
+
+FINGERPOINT_DELAY_OFFSET=100  
+
 
 LOG="$STORAGE/Android/perapp/log.txt"
 CurPath="$STORAGE/Android/perapp/uperf_cur_path.txt"
@@ -12,14 +17,19 @@ ModePath="$STORAGE/Android/perapp/uperf_mode_path.txt"
 # Default settings
 UPERF=$(cat "$CurPath")
 UPERFSET=$(cat "$ModePath")
+
 p_log () {
     echo "[$(date +'%H:%M:%S')] $1" >> "$LOG"
 }
 
-
+# changemod "MODE" "LOG"
 changemod () {
-    tomode="$1"
-    echo "$tomode" > "$UPERF"
+    toMode="$1"
+    nowMode=$(cat "$UPERF")
+    if [ "$nowMode" != "$toMode" ]; then
+        echo "$toMode" > "$UPERF"
+        p_log "$2"
+    fi
 }
 
 checkscreen () {
@@ -30,13 +40,11 @@ checkscreen () {
     screenonMode=$(grep '^*' $UPERFSET | awk -F ' ' '{print $2}')
     changeTo=$([ "$isScreenOn" == "true" ] && echo "$screenonMode" || echo "$offscreenMode")
 
-    nowStat=$(cat "$UPERF")
-    if [ "$changeTo" != "$nowStat" ]; then
-        echo "Success into: $isScreenOn -> $changeTo"
-        p_log "isScreenOn=$isScreenOn -> $changeTo"
+    changemod "$changeTo" "isScreenOn=$isScreenOn -> $changeTo"
+}
 
-        changemod "$changeTo"
-    fi
+getScreenStat () {
+    echo "$(dumpsys deviceidle | grep mScreenOn | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | awk -F '=' '{print $2}')"
 }
 
 fingerprintUnlock () {
@@ -45,40 +53,23 @@ fingerprintUnlock () {
     screenonMode=$(grep '^*' $UPERFSET | awk -F ' ' '{print $2}')
 
     if [ "$1" == "DOWN" ]; then
-        nowStat=$(cat "$UPERF")
-        if [ "$screenonMode" == "$nowStat" ]; then
-            return
-        fi
-        changemod "$screenonMode"
-
-        p_log "FP Touching -> $screenonMode"
-
+        changemod "$screenonMode" "FP Touching -> $screenonMode"
     else
+        i=0
+        while (( $i < $FINGERPOINT_DELAY_OFFSET )); do
 
-        sleep 0.5
-        isScreenOn=$(dumpsys deviceidle | grep mScreenOn | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | awk -F '=' '{print $2}')
-        nowStat=$(cat "$UPERF")
+            isScreenOn="$(getScreenStat)"
 
-
-        if [ "$isScreenOn" == "true" ]; then
-
-            p_log "FP SUC -> $screenonMode"
-
-            if [ "$screenonMode" == "$nowStat" ]; then
+            if [ "$isScreenOn" == "true" ]; then
+                changemod "$screenonMode" "FP SUC -> $screenonMode"
                 return
             fi
-            changemod "$screenonMode"
 
-        else
+            i=$((i+1))
+            sleep 0.01
+        done
 
-            p_log "FP FAIL -> $offscreenMode"
-
-            if [ "$offscreenMode" == "$nowStat" ]; then
-                return
-            fi
-            changemod "$offscreenMode"
-            
-        fi
+        changemod "$offscreenMode" "FP FAIL -> $offscreenMode"
     fi
 }
 
