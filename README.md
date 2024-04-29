@@ -2,9 +2,10 @@
 A Magisk module for uperf(A13)
 
 ## 原理
-使用 getevent -l 监听 **/dev/input/event1** 下的电源键点击事件，并借助 **dumpsys** 判断是否为亮屏或息屏状态，并写入切换的状态到 **/storage/emulated/0/Android/yc/uperf/cur_powermode.txt**内。  
+* 监听系统前台切换事件与电源键、锁屏解锁事件，以达到原 Uperf 自动切换应用调度的功能。
+* 不会与其他调度配置文件冲突，因为本模块会实时读取 Uperf 的各应用调度。
   
-使用 inotifywait 监听 **/dev/cpuset/top-app** 的文件变动，并借助 **dumpsys** 判断顶层应用，并将应用调度写入到上文uperf的调度配置文件中。  
+
 
 ## 使用
 * 安装 Uperf v3 (22.09.04) ，然后安装本模块。
@@ -18,6 +19,8 @@ A Magisk module for uperf(A13)
 * 若您有意无偿提供测试信息，且有一定 **adb** 基础，请与我联系适配。
 
 ## 更新日志
+* v3.4:
+*   更改算法使用循环监测电源键亮屏事件。
 * v3.2:
 *   更改算法使用循环监测指纹解锁亮屏事件。
 * v2.0.0：
