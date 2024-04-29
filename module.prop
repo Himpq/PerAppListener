@@ -1,6 +1,6 @@
 id=perapplsn
 name=PerApp Listener
-version=2.0
-versionCode=2
+version=3.2
+versionCode=32
 author=Himpq
 description=为 Android 13 的 Uperf 提供每个APP的切换调度（Uperf自带的自动切换调度于 A13 不生效）
