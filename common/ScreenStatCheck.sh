@@ -32,19 +32,43 @@ changemod () {
     fi
 }
 
-checkscreen () {
-    sleep 0.5
-
-    isScreenOn=$(dumpsys deviceidle | grep mScreenOn | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | awk -F '=' '{print $2}')
-    offscreenMode=$(grep '^-' $UPERFSET | awk -F ' ' '{print $2}')
-    screenonMode=$(grep '^*' $UPERFSET | awk -F ' ' '{print $2}')
-    changeTo=$([ "$isScreenOn" == "true" ] && echo "$screenonMode" || echo "$offscreenMode")
-
-    changemod "$changeTo" "isScreenOn=$isScreenOn -> $changeTo"
-}
-
 getScreenStat () {
     echo "$(dumpsys deviceidle | grep mScreenOn | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g' | awk -F '=' '{print $2}')"
+}
+
+waitForScreenStatChange () {
+    prevStat="$(getScreenStat)"
+    timeout=$1
+    t=0
+    while (( $t < $timeout)); do
+        t=$((t+1))
+
+        nowStat="$(getScreenStat)"
+        if [ "$nowStat" != "$prevStat" ]; then
+            return
+        fi
+
+        sleep 0.01
+    done
+}
+
+checkscreen () {
+    keyType="$1"
+
+    offscreenMode=$(grep '^-' $UPERFSET | awk -F ' ' '{print $2}')
+    screenonMode=$(grep '^*' $UPERFSET | awk -F ' ' '{print $2}')
+
+    if [ "$keyType" == "UP" ]; then
+        waitForScreenStatChange 100
+
+        isScreenOn="$(getScreenStat)"
+        changeTo=$([ "$isScreenOn" == "true" ] && echo "$screenonMode" || echo "$offscreenMode")
+        changemod "$changeTo" "isScreenOn=$isScreenOn -> $changeTo"
+
+    elif [ "$keyType" == "DOWN" ]; then
+        #DOWN
+        changemod "$screenonMode" "Pred Rise Freq -> $screenonMode"
+    fi
 }
 
 fingerprintUnlock () {
@@ -75,8 +99,8 @@ fingerprintUnlock () {
 
 p_log "Starting ScreenStatCheck..."
 
-getevent -l /dev/input/event1 | grep "SYN_REPORT" | while read event key typ; do 
-    checkscreen
+getevent -l /dev/input/event1 | while read event key typ; do 
+    checkscreen "$typ"
 done &
 
 getevent -l /dev/input/event5 | grep "0152" | while read xp1 xp2 xp3; do
