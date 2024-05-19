@@ -21,23 +21,29 @@ sleep 30
 MODDIR=${0%/*}
 STORAGE="/storage/emulated/0"
 LOG="$STORAGE/Android/perapp/log.txt"
+
 CurPath="$STORAGE/Android/perapp/uperf_cur_path.txt"
 ModePath="$STORAGE/Android/perapp/uperf_mode_path.txt"
+EventPath="$STORAGE/Android/perapp/power_event_path.txt"
+AutoCheck="$STORAGE/Android/perapp/auto_check.txt"
 
 # Default Uperf Path Settings
-
 UPERF="/storage/emulated/0/Android/yc/uperf/cur_powermode.txt"
 UPERFSET="/storage/emulated/0/Android/yc/uperf/perapp_powermode.txt"
+
+
 # Change permissions
 chmod 777 -R "$MODDIR"
 chmod 777 -R "$MODDIR/common"
 
 # Check uperf settings
-if [ ! -d "$STORAGE/Android/perapp" ] || [ ! -f "$CurPath" ] || [ ! -f "$ModePath" ]; then
+if [ ! -d "$STORAGE/Android/perapp" ] || [ ! -f "$CurPath" ] || [ ! -f "$ModePath" ] || [ ! -f "$EventPath" ] || [ ! -f "$AutoCheck" ]; then
     mkdir $STORAGE/Android/perapp/
     
     echo "$UPERF" > "$CurPath"
     echo "$UPERFSET" > "$ModePath"
+    echo "/dev/input/event1" > "$EventPath"
+    echo "15" > "$AutoCheck"
 else
     UPERF=$(cat "$CurPath")
     UPERFSET=$(cat "$ModePath")
