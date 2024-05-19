@@ -13,6 +13,8 @@ FINGERPOINT_DELAY_OFFSET=100
 LOG="$STORAGE/Android/perapp/log.txt"
 CurPath="$STORAGE/Android/perapp/uperf_cur_path.txt"
 ModePath="$STORAGE/Android/perapp/uperf_mode_path.txt"
+EventPath="$STORAGE/Android/perapp/power_event_path.txt"
+AutoCheck="$STORAGE/Android/perapp/auto_check.txt"
 
 # Default settings
 UPERF=$(cat "$CurPath")
@@ -66,7 +68,6 @@ checkscreen () {
         changemod "$changeTo" "isScreenOn=$isScreenOn -> $changeTo"
 
     elif [ "$keyType" == "DOWN" ]; then
-        #DOWN
         changemod "$screenonMode" "Pred Rise Freq -> $screenonMode"
     fi
 }
@@ -97,12 +98,45 @@ fingerprintUnlock () {
     fi
 }
 
+checkScreenStat() {
+    if [ "$(cat "$AutoCheck")" == "-1" ]; then
+        sleep 60
+        return
+    fi
+
+    sOn="$(getScreenStat)"
+    offscreenMode=$(grep '^-' $UPERFSET | awk -F ' ' '{print $2}')
+    screenonMode=$(grep '^*' $UPERFSET | awk -F ' ' '{print $2}')
+
+    if [ "$sOn" == "true" ]; then
+        changemod "$screenonMode" "screenOn=$sOn -> $screenonMode"
+    else
+        changemod "$offscreenMode" "screenOn=$sOn -> $offscreenMode"
+    fi
+
+    sleep $(cat "$AutoCheck")
+}
+
+ep=$(cat "$EventPath")
+fpevent="/dev/input/event5"
+
 p_log "Starting ScreenStatCheck..."
 
-getevent -l /dev/input/event1 | while read event key typ; do 
+p_log "Listening $ep -> powerkey"
+p_log "Listening $fpevent -> fingerprint"
+p_log "check screen stat: "$(cat "$AutoCheck")""
+p_log "If you wanna close the auto check service, change /Android/perapp/auto_check.txt content to '-1'"
+p_log ""
+
+getevent -l "$ep" | while read event key typ; do 
     checkscreen "$typ"
 done &
 
-getevent -l /dev/input/event5 | grep "0152" | while read xp1 xp2 xp3; do
+getevent -l "$fpevent" | grep "0152" | while read xp1 xp2 xp3; do
     fingerprintUnlock "$xp3"
+done &
+
+
+while true; do
+    checkScreenStat
 done
