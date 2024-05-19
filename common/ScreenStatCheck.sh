@@ -108,9 +108,7 @@ checkScreenStat() {
     offscreenMode=$(grep '^-' $UPERFSET | awk -F ' ' '{print $2}')
     screenonMode=$(grep '^*' $UPERFSET | awk -F ' ' '{print $2}')
 
-    if [ "$sOn" == "true" ]; then
-        changemod "$screenonMode" "screenOn=$sOn -> $screenonMode"
-    else
+    if [ "$sOn" == "false" ]; then
         changemod "$offscreenMode" "screenOn=$sOn -> $offscreenMode"
     fi
 
