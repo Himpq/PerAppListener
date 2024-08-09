@@ -34,6 +34,8 @@
 * CAS   ( Xiaomi 10 Ultra   ) 的指纹解锁事件名为0152(/dev/input/event5)，电源键事件名为KEY_POWER(/dev/input/event1)
 
 ## 更新日志
+* v3.8:
+*   修复开机无法启动模块的问题。
 * v3.4:
 *   更改算法使用循环监测电源键亮屏事件。
 * v3.2:
