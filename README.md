@@ -1,5 +1,5 @@
 # PerAppListener
-A Magisk module for uperf(A13)
+一个 **接管** Uperf 调度切换的模块。（会与 Scene 等调度切换软件、模块冲突）  
 
 ## 原理
 * 监听系统前台切换事件与电源键、锁屏解锁事件，以达到原 Uperf 自动切换应用调度的功能。
